@@ -205,10 +205,36 @@ Notice that the call to `db.run` is again wrapped within the callback of a promi
 
 The important thing to focus on in this implemetation is the callback provided to `db.get()`. The signature of the function call is: `db.get(sql, [replacements], function(err, resultRow){})`. The callback provided as the final argument to `db.get()` will accept 2 arguments, the first any error object, the second, the singular resulting row of the query as a JSON object, in the case of a row from the `users` table, `{id: 1, name: Adele Goldberg}`.
 
+```js
+db.get(sql, [id], function(err, resultRow){
+  console.log(`...found ${JSON.stringify(resultRow)}!`)
 
-Once the
+  const user = new User(resultRow.name, resultRow.age)
+  user.id = resultRow.id
+
+  resolve(user)        
+})
+```
+
+In this callback, we take the second argument, a raw JSON object of the user's row, and we use the data to create a real `User` instance in the context of our program. This process is known as reification, taking raw data and turning it into an instance of an ORM class. We use the `User` constructor for `name` and `age` of `resultRow` and then set the `id` property of the instance of a `User` to the `id` of `resultRow`. Why create a new instance of a `User` if this infact represents an instance in our database? That's a topic for another day, just trust me.
+
+*Update that explanation.*
+
+The final step in the callback is to `resolve` the enclosing promise by passing the riefied instance of the `User` based on the `resultRow`.
 
 The file `printFirstUser.js` has an implementation that makes use of `async` and `await` to search for the user with primary key `1` and print the user instance's details:
+
+**File: [printFirstUser.js](https://github.com/learn-co-curriculum/javascript-orm-intro/blob/master/printFirstUser.js)**
+```js
+const User = require('./User.js');
+
+(async function(){
+  const user = await User.Find(1)
+  console.log(`${user.name} is ${user.age} with id ${user.id}`)
+})();
+```
+
+Running that script produces:
 
 ```
 // ♥ node printFirstUser.js 
