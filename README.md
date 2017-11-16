@@ -183,7 +183,7 @@ We use the `db.run()` function when we want to execute SQL but don't really care
 ```js
 clas User{
   static Find(id){
-    const sql = `SELECT * FROM users WHERE id = ?`
+    const sql = `SELECT * FROM users WHERE id = ? LIMIT 1`
 
     console.log(`Querying for user id ${id}...`)
 
@@ -243,5 +243,58 @@ Querying for user id 1...
 Adele Goldberg is 62 with id 1
 ```
 
-### `db.all()
+### `db.all()`
 
+The last crucial function exposed by the `SQLite3` database driver is `db.all()`. Unlike `db.get()`, this function is built to return all rows that match a query. It's syntax and structure is exactly like `db.get()`, but the 2nd argument passed to the callback will be an array.
+
+We could use `db.all()` to implement a `static` class function on `User` of `All()`, to return all users from our database. By this point, you should start recognizing the pattern.
+
+**Included in File: [User.js]()**
+```js
+  static All(){
+    const sql = `SELECT * FROM users`
+
+    console.log(`Loading all users...`)
+    return new Promise(function(resolve){
+      db.all(sql, function(err, results){
+        console.log(`...found ${results.length} users!`)
+
+        const users = results.map(function(userRow){
+          const user = new User(userRow.name, userRow.age)
+          user.id = userRow.id
+          return user
+        })
+
+        resolve(users)
+      })
+    })      
+  }
+```  
+
+The differences between `All()` and `Find(id)` aren't too many. The `SELECT ` statement is not scoped to query for a particular user, but rather to return all the rows. The callback for `db.all()` accepts an array of result rows. The most complicated and significant difference is how we map or collect all the raw row data into actual `User` instances. `results.map` will yield each row individually to the callback provided. We take each `userRow` and cast the raw data into a `User` instance and return it, making the entire return value of `results.map` a new array filled with actual `User` instances based on the results from the DB. That collection becomes the `resolve` of the promise that wraps the `db.all()` call.
+
+We can see this in action by running `printAllUsers.js`
+
+**File: printAllUsers.js**
+```js
+const User = require('./User.js');
+
+(async function(){
+  const users = await User.All()
+  users.forEach(function(user){
+    console.log(`${user.name} is ${user.age} with id ${user.id}`)  
+  })
+})();
+```
+
+Which will output (depending on how many users you have in your DB):
+
+```
+// ♥ node printAllUsers.js 
+Loading all users...
+...found 2 users!
+Adele Goldberg is 62 with id 1
+Alan Kay is 65 with id 2
+```
+
+And with that we have implemented the majority of the ORM functionality we have been looking for - congratulations!

@@ -22,7 +22,7 @@ class User {
   }
   
   static Find(id){
-    const sql = `SELECT * FROM users WHERE id = ?`
+    const sql = `SELECT * FROM users WHERE id = ? LIMIT 1`
 
     console.log(`Querying for user id ${id}...`)
 
@@ -36,6 +36,25 @@ class User {
         resolve(user)        
       })
     })  
+  }
+
+  static All(){
+    const sql = `SELECT * FROM users`
+
+    console.log(`Loading all users...`)
+    return new Promise(function(resolve){
+      db.all(sql, function(err, results){
+        console.log(`...found ${results.length} users!`)
+
+        const users = results.map(function(userRow){
+          const user = new User(userRow.name, userRow.age)
+          user.id = userRow.id
+          return user
+        })
+
+        resolve(users)
+      })
+    })      
   }
 
   constructor(name, age){
