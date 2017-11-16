@@ -14,7 +14,7 @@ The basic premise is that if you have a class `User`, you should have a table ca
 
 ![Code and DB](https://cl.ly/nh9W/Image%202017-11-14%20at%201.47.44%20PM.png)
 
-*CRUD NOTES*
+In general an ORM is designed to provide access to the basic CRUD functionality of CREATE, RETRIEVE, UPDATE, and DELETE.
 
 The `User` object can even handle a lot of the database integration, knowing how to create the required tables and schema, insert records based on instances, update the row corresponding to an instance, delete the row corresponding to an instance, and find rows and return instances.
 
@@ -28,6 +28,8 @@ There are a number of reasons why we use the ORM pattern. Two good ones are:
 The most important thing is the encapsulation of Database logic and SQL into an object. It is a trust between an object and the programmer, when you say `user.save()` you know it has been saved, whether it was an `INSERT` or an `UPDATE` or the specific database implementation, Mongo or SQL, none of it matters. The object fully encapsulates the persistance and database, and you just trust it. You hide the details and simplify the rest of your program. Once an ORM is designed, how it works no longer matters to the rest of the application. That's what makes building complex and large database-backed applications powerful.
 
 ## A Sample ORM in Javascript
+
+**To play with these examples, you have to `git clone git@github.com:learn-co-curriculum/javascript-orm-intro.git` into the Learn IDE or your environment.**
 
 To build an ORM in JavaScript powered by SQL and a Relational Database we need a Database Driver object that can open a connection to a database and execute SQL and return raw data in the form of Arrays, Strings, and Integers, to our code. For SQLite, we are going to use the [SQLite npm package](http://www.sqlitetutorial.net/sqlite-nodejs/).
 
@@ -52,7 +54,7 @@ To execute statements where there is no return value from the database, such as 
 
 Let's look at an example of how we might create a `users` table for a `User` class.
 
-**Included in File: [User.js]()**
+**Included in File: [User.js](https://github.com/learn-co-curriculum/javascript-orm-intro/blob/master/User.js#L5-L22)**
 ```js
 const sqlite3 = require('sqlite3').verbose()
 const db = new sqlite3.Database(`./db/development.sqlite`, sqlite3.OPEN_READWRITE)
@@ -85,7 +87,7 @@ Always wrap any call to the database in a promise and resolve the promise in the
 
 You could execute `User.CreateTable()` synchronously with:
 
-**Included in File: insertUsers.js**
+**Included in File: [insertUsers.js](https://github.com/learn-co-curriculum/javascript-orm-intro/blob/master/insertUsers.js#L5)**
 ```js
 (async function(){
   await User.CreateTable();
@@ -96,7 +98,7 @@ You could execute `User.CreateTable()` synchronously with:
 
 Let's see how we would use `db.run()` to `INSERT` an instance of a `User` into the `users` table.
 
-**Included in File: [User.js]()**
+**Included in File: [User.js](https://github.com/learn-co-curriculum/javascript-orm-intro/blob/master/User.js#L60-L78)**
 ```js
 const sqlite3 = require('sqlite3').verbose()
 const db = new sqlite3.Database(`./db/development.sqlite`, sqlite3.OPEN_READWRITE)
@@ -179,7 +181,7 @@ We use the `db.run()` function when we want to execute SQL but don't really care
 
 `db.get()` is meant to return only the first result row from a `SELECT` query. This makes `db.get()` ideal for `SELECT` queries with a `WHERE` clause and a `LIMIT 1`, ensuring the DB returns the first desired row. The symmetrical operation of such a `SELECT`, for example, `SELECT * FROM users WHERE id = 1 LIMIT 1;`, looking for the user with the primary key `id` matching `1` with a `LIMIT 1` clause ensuring a single row return value, is `User.Find(id)`, a static class function on `User` that queries for a single user based on primary key. The implementation, along with the promise ensuring synchronous behavior, is:
 
-**Included in File: [User.js]()**
+**Included in File: [User.js](https://github.com/learn-co-curriculum/javascript-orm-intro/blob/master/User.js#L24-L39)**
 ```js
 clas User{
   static Find(id){
@@ -216,9 +218,9 @@ db.get(sql, [id], function(err, resultRow){
 })
 ```
 
-In this callback, we take the second argument, a raw JSON object of the user's row, and we use the data to create a real `User` instance in the context of our program. This process is known as reification, taking raw data and turning it into an instance of an ORM class. We use the `User` constructor for `name` and `age` of `resultRow` and then set the `id` property of the instance of a `User` to the `id` of `resultRow`. Why create a new instance of a `User` if this infact represents an instance in our database? That's a topic for another day, just trust me.
+In this callback, we take the second argument, a raw JSON object of the user's row, and we use the data to create a real `User` instance in the context of our program. This process is known as reification, taking raw data and turning it into an instance of an ORM class. We use the `User` constructor for `name` and `age` of `resultRow` and then set the `id` property of the instance of a `User` to the `id` of `resultRow`.
 
-*Update that explanation.*
+This is an important step. When we take data out of the database, it's important to convert it into the domain object in our program, an actual instance of a `User`. If we don't riefy the raw data into a `User` instance, none of the other functionality available to a `User` will work.
 
 The final step in the callback is to `resolve` the enclosing promise by passing the riefied instance of the `User` based on the `resultRow`.
 
@@ -249,7 +251,7 @@ The last crucial function exposed by the `SQLite3` database driver is `db.all()`
 
 We could use `db.all()` to implement a `static` class function on `User` of `All()`, to return all users from our database. By this point, you should start recognizing the pattern.
 
-**Included in File: [User.js]()**
+**Included in File: [User.js](https://github.com/learn-co-curriculum/javascript-orm-intro/blob/master/User.js#L41-L58)**
 ```js
   static All(){
     const sql = `SELECT * FROM users`
