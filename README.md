@@ -29,7 +29,7 @@ The most important thing is the encapsulation of Database logic and SQL into an 
 
 ## A Sample ORM in Javascript
 
-**To play with these examples, you have to `git clone git@github.com:learn-co-curriculum/javascript-orm-intro.git` into the Learn IDE or your environment.**
+**To play with these examples, you have to `git clone git@github.com:learn-co-curriculum/javascript-orm-intro.git` into the Learn IDE or your environment. Then, `cd javascript-orm-intro` to work in the project folder.**
 
 To build an ORM in JavaScript powered by SQL and a Relational Database we need a Database Driver object that can open a connection to a database and execute SQL and return raw data in the form of Arrays, Strings, and Integers, to our code. For SQLite, we are going to use the [SQLite npm package](http://www.sqlitetutorial.net/sqlite-nodejs/).
 
@@ -146,7 +146,7 @@ db.run(sql, [self.name, self.age], function(){
 })
 ```
 
-Within that callback function, `db.run` makes the scope of `this` to be information about the insert containing the property `lastID`. We can update the instance of user, which we early cast to the variable `self`, to have the `id` property of `this.lastID`, which th `db` driver provided.
+Within that callback function, `db.run` makes the scope of `this` to be information about the insert containing the property `lastID`. We can update the instance of user, which we early cast to the variable `self`, to have the `id` property of `this.lastID`, which the `db` driver provided.
 
 With that, we have a fully functioning `insert()` instance method for our `User` ORM. 
 
@@ -183,7 +183,7 @@ We use the `db.run()` function when we want to execute SQL but don't really care
 
 **Included in File: [User.js](https://github.com/learn-co-curriculum/javascript-orm-intro/blob/master/User.js#L24-L39)**
 ```js
-clas User{
+class User{
   static Find(id){
     const sql = `SELECT * FROM users WHERE id = ? LIMIT 1`
 
@@ -203,7 +203,7 @@ clas User{
 }
 ```
 
-Notice that the call to `db.run` is again wrapped within the callback of a promise. All database executions to `db` should be nested within the callback of a promise. Embedding the database operation within the callback of a promise enables you to always `await` the resolution using `resolve`, forcing the promise into a synchronous execution.
+Notice that the call to `db.get` is again wrapped within the callback of a promise. All database executions to `db` should be nested within the callback of a promise. Embedding the database operation within the callback of a promise enables you to always `await` the resolution using `resolve`, forcing the promise into a synchronous execution.
 
 The important thing to focus on in this implemetation is the callback provided to `db.get()`. The signature of the function call is: `db.get(sql, [replacements], function(err, resultRow){})`. The callback provided as the final argument to `db.get()` will accept 2 arguments, the first any error object, the second, the singular resulting row of the query as a JSON object, in the case of a row from the `users` table, `{id: 1, name: Adele Goldberg}`.
 
@@ -220,9 +220,9 @@ db.get(sql, [id], function(err, resultRow){
 
 In this callback, we take the second argument, a raw JSON object of the user's row, and we use the data to create a real `User` instance in the context of our program. This process is known as reification, taking raw data and turning it into an instance of an ORM class. We use the `User` constructor for `name` and `age` of `resultRow` and then set the `id` property of the instance of a `User` to the `id` of `resultRow`.
 
-This is an important step. When we take data out of the database, it's important to convert it into the domain object in our program, an actual instance of a `User`. If we don't riefy the raw data into a `User` instance, none of the other functionality available to a `User` will work.
+This is an important step. When we take data out of the database, it's important to convert it into the domain object in our program, an actual instance of a `User`. If we don't reify the raw data into a `User` instance, none of the other functionality available to a `User` will work.
 
-The final step in the callback is to `resolve` the enclosing promise by passing the riefied instance of the `User` based on the `resultRow`.
+The final step in the callback is to `resolve` the enclosing promise by passing the reified instance of the `User` based on the `resultRow`.
 
 The file `printFirstUser.js` has an implementation that makes use of `async` and `await` to search for the user with primary key `1` and print the user instance's details:
 
